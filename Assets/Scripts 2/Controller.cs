@@ -77,13 +77,30 @@ public class Controller : MonoBehaviour
         }
         else if (Input.touchCount == 1 && currentAction != CameraAction.Zooming)
         {
-            currentAction = CameraAction.Rotating;
-            Rotate(true);
+            // Check if the touch is on a "Movable" object
+            if (!IsTouchingMovable())
+            {
+                currentAction = CameraAction.Rotating;
+                Rotate(true);
+            }
+            else
+            {
+                // Prevent rotating if touching a movable object
+                currentAction = CameraAction.Panning;
+            }
         }
         else if (Input.GetMouseButton(1))
         {
-            currentAction = CameraAction.Rotating;
-            Rotate(false);
+            if (!IsTouchingMovable())
+            {
+                currentAction = CameraAction.Rotating;
+                Rotate(false);
+            }
+            else
+            {
+                // Prevent rotating if clicking on a movable object
+                currentAction = CameraAction.Panning;
+            }
         }
 
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -91,6 +108,35 @@ public class Controller : MonoBehaviour
         {
             Zoom(scroll * zoomSensitivity);
         }
+    }
+
+    private bool IsTouchingMovable()
+    {
+        Ray ray;
+        RaycastHit hit;
+
+        // Check touch or mouse input for the correct position
+        if (Input.touchCount == 1)
+        {
+            ray = mainCamera.ScreenPointToRay(Input.GetTouch(0).position);
+        }
+        else if (Input.GetMouseButton(1) || Input.GetMouseButton(2))
+        {
+            ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+        }
+        else
+        {
+            return false;
+        }
+
+        // Raycast to detect if the touch or mouse hit a "Movable" object
+        if (Physics.Raycast(ray, out hit))
+        {
+            // Check if the object hit has the "Movable" tag
+            return hit.collider.CompareTag("Movable");
+        }
+
+        return false;
     }
 
     private void TouchZoomOrPan()
