@@ -10,13 +10,18 @@ using Lean.Touch;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+//using System.Linq;
 
 public class UndoScript : MonoBehaviour
 {
     private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
+    private bool suppressRecording = false; // Flag to suppress recording after undo
 
     public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
     {
+        if (suppressRecording) return; // Skip recording if suppress flag is active
+
+        // Only push a state if it's not a duplicate of the most recent state.
         if (globalMovementHistory.Count == 0 ||
             globalMovementHistory.Peek().position != position ||
             globalMovementHistory.Peek().rotation != rotation)
@@ -30,14 +35,24 @@ public class UndoScript : MonoBehaviour
     {
         if (globalMovementHistory.Count > 1)
         {
-            var lastState = globalMovementHistory.Pop();
-            var previousState = globalMovementHistory.Peek();
+            suppressRecording = true; // Activate suppress flag
 
+            // Remove the latest state.
+            globalMovementHistory.Pop();
+
+            // Apply the previous state.
+            var previousState = globalMovementHistory.Peek();
             previousState.bodyPart.transform.position = previousState.position;
             previousState.bodyPart.transform.rotation = previousState.rotation;
+
+            Debug.Log($"[UNDO] Reverted to state: {previousState.bodyPart.name} at position: {previousState.position}, rotation: {previousState.rotation}");
+
+            suppressRecording = false; // Deactivate suppress flag after undo completes
         }
     }
 }
+
+
 /*private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
 
 public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
