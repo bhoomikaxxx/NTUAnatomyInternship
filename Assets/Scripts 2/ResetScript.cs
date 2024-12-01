@@ -38,8 +38,7 @@ public class ResetScript : MonoBehaviour
     public Dictionary<GameObject, Quaternion> initialBodyRotations = new Dictionary<GameObject, Quaternion>();
     public Dictionary<GameObject, Transform> initialBodyParents = new Dictionary<GameObject, Transform>();
 
-
-    //Undo script
+    //BodyPartsScript script ref
     private BodyPartsScript bodyPartManager;
 
     void Awake()
@@ -77,7 +76,7 @@ public class ResetScript : MonoBehaviour
 
     public void Center()
     {
-        //Reset camera values
+        //Reset cam values
         if (mainCamera != null)
         {
             mainCamera.transform.position = initialCameraPosition;
@@ -112,17 +111,17 @@ public class ResetScript : MonoBehaviour
     }
     public void ClearSelection()
     {
-        // Clear selected body parts and offsets
+        //Clear selected body parts and offsets
         bodyPartManager.selectedBodyParts.Clear();
         bodyPartManager.dragOffsets.Clear();
 
-        // Reset UI text or states (optional)
+        //Reset label UI
         if (labelText != null)
         {
             labelText.text = "No parts selected";
         }
 
-        // Reset selection toggles
+        //Reset selection toggles
         singleSelectToggle.isOn = false;
         multiSelectToggle.isOn = false;
 

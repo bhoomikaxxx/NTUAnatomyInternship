@@ -13,7 +13,7 @@ using UnityEngine.EventSystems;
 
 public class BodyPartsScript : MonoBehaviour
 {
-    // Declarations
+    //Declarations
     [Header("Camera")]
     public Camera mainCamera;
 
@@ -24,7 +24,6 @@ public class BodyPartsScript : MonoBehaviour
     public TMP_Text labelText;
 
     public GameObject selectedBodyPart = null;
-    public float dragSensitivity = 0.5f;
     public bool isDragging = false;
     public bool isTouchingMovable = false;
 
@@ -32,42 +31,51 @@ public class BodyPartsScript : MonoBehaviour
     public Toggle singleSelectToggle;
     public Toggle multiSelectToggle;
 
+    //Multi select 
     public bool isMultiSelect = false;
     public List<GameObject> selectedBodyParts = new List<GameObject>();
     public Dictionary<GameObject, Vector3> dragOffsets = new Dictionary<GameObject, Vector3>();
 
+    //Undo script ref
     private UndoScript historyManager;
 
-    private float lastClickTime = 0f;  // Track time of last click
-    private const float doubleClickThreshold = 3f; // 3 seconds for double-click
+    //Double click deselect for multi select
+    private float lastClickTime = 0f;
+    private const float doubleClickThreshold = 3f;
 
     public void Awake()
     {
+        //Add cam
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
         }
 
+        //Ref to Undo script
         historyManager = FindObjectOfType<UndoScript>();
 
+        //Add single select toggle
         if (singleSelectToggle != null)
         {
             singleSelectToggle.onValueChanged.AddListener((value) =>
             {
                 if (value)
                 {
+                    //Multi select is OFF when single select is on
                     isMultiSelect = false;
                     multiSelectToggle.isOn = false;
                 }
             });
         }
 
+        // Add multi select toggle
         if (multiSelectToggle != null)
         {
             multiSelectToggle.onValueChanged.AddListener((value) =>
             {
                 if (value)
                 {
+                    //Single select is OFF when multi select is on
                     isMultiSelect = true;
                     singleSelectToggle.isOn = false;
                 }
@@ -80,72 +88,85 @@ public class BodyPartsScript : MonoBehaviour
         Dragging();
     }
 
+    //Drag check func
     public void Dragging()
     {
+        //Check for right mouse click/touch
         if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
         {
+            //Get pos
             Vector3 screenPosition = GetInputPosition();
             Ray ray = mainCamera.ScreenPointToRay(screenPosition);
             RaycastHit hit;
 
+            //Check if body part
+            //To prevent intefering with model rotation (also single finger drag)
             if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Movable"))
             {
                 isTouchingMovable = true;
                 GameObject bodyPart = hit.collider.gameObject;
 
+                //Check for time btwn touch
                 float currentTime = Time.time;
+
                 if (isMultiSelect && selectedBodyParts.Contains(bodyPart))
                 {
                     if (currentTime - lastClickTime < doubleClickThreshold)
                     {
-                        // Double-click detected: Deselect body part
+                        //Double click less than 3s to deselect
                         selectedBodyParts.Remove(bodyPart);
                         dragOffsets.Remove(bodyPart);
+
+                        //Count
                         labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                     }
                 }
                 else
                 {
-                    // First click: Select or add to multi-select
+                    //Multi select add
                     if (isMultiSelect)
                     {
                         selectedBodyParts.Add(bodyPart);
                         dragOffsets[bodyPart] = Vector3.zero;
                         labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                     }
+                    //Single select add
                     else if (singleSelectToggle.isOn)
                     {
                         selectedBodyParts.Clear();
                         dragOffsets.Clear();
                         selectedBodyParts.Add(bodyPart);
                         dragOffsets[bodyPart] = Vector3.zero;
+
+                        //Label
                         labelText.text = "Selected Part: " + bodyPart.name;
                     }
                 }
-
-                lastClickTime = currentTime; // Update last click time
+                lastClickTime = currentTime;
             }
         }
 
+        //Dragging check
         if (isTouchingMovable && (Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)))
         {
             if (!isDragging && selectedBodyParts.Count > 0)
             {
                 Drag();
             }
-
             if (isDragging)
             {
                 MoveBodyParts(selectedBodyParts);
             }
         }
 
+        //Dragging ended logic
         if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
         {
             StopDrag();
         }
     }
 
+    //Drag func
     public void Drag()
     {
         isDragging = true;
@@ -158,19 +179,21 @@ public class BodyPartsScript : MonoBehaviour
         }
     }
 
+    //Drag ended func
     public void StopDrag()
     {
         isDragging = false;
         isTouchingMovable = false;
 
+        //Record final state
         foreach (GameObject bodyPart in selectedBodyParts)
         {
             historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
         }
-
         selectedBodyPart = null;
     }
 
+    //Multi select list logic
     public void MoveBodyParts(List<GameObject> bodyParts)
     {
         Vector3 screenPosition = GetInputPosition();
@@ -180,11 +203,12 @@ public class BodyPartsScript : MonoBehaviour
             if (dragOffsets.TryGetValue(bodyPart, out Vector3 offset))
             {
                 Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.WorldToScreenPoint(bodyPart.transform.position).z));
-                bodyPart.transform.position = Vector3.Lerp(bodyPart.transform.position, worldPosition + offset, dragSensitivity);
+                bodyPart.transform.position = Vector3.Lerp(bodyPart.transform.position, worldPosition + offset, 0.5f);
             }
         }
     }
 
+    //Pos logic
     public Vector3 GetInputPosition()
     {
         if (Input.touchCount > 0)
