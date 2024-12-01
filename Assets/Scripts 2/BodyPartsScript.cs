@@ -41,7 +41,14 @@ public class BodyPartsScript : MonoBehaviour
 
     //Double click deselect for multi select
     private float lastClickTime = 0f;
-    private const float doubleClickThreshold = 3f;
+    //private const float doubleClickThreshold = 2f;
+
+    //Camera zoom settings
+    private Vector3 originalCameraPosition;
+    private float originalCameraSize;
+    public float targetOrthographicSize = 0.5f;  
+    public float zoomDuration = 0.5f;  
+    private bool isZooming = false;
 
     public void Awake()
     {
@@ -50,6 +57,10 @@ public class BodyPartsScript : MonoBehaviour
         {
             mainCamera = Camera.main;
         }
+
+        //Initial camera pos and size
+        originalCameraPosition = mainCamera.transform.position;
+        originalCameraSize = mainCamera.orthographicSize;
 
         //Ref to Undo script
         historyManager = FindObjectOfType<UndoScript>();
@@ -91,33 +102,32 @@ public class BodyPartsScript : MonoBehaviour
     //Drag check func
     public void Dragging()
     {
-        //Check for right mouse click/touch
+        //Check for left mouse click or touch start
         if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
         {
-            //Get pos
+            //Get position of the input (mouse or touch)
             Vector3 screenPosition = GetInputPosition();
             Ray ray = mainCamera.ScreenPointToRay(screenPosition);
             RaycastHit hit;
 
-            //Check if body part
-            //To prevent intefering with model rotation (also single finger drag)
             if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Movable"))
             {
                 isTouchingMovable = true;
                 GameObject bodyPart = hit.collider.gameObject;
 
-                //Check for time btwn touch
+                //Check for time between clicks 
                 float currentTime = Time.time;
 
                 if (isMultiSelect && selectedBodyParts.Contains(bodyPart))
                 {
-                    if (currentTime - lastClickTime < doubleClickThreshold)
+                    //Check for double-click (mouse) or double-tap (touch)
+                    if (currentTime - lastClickTime < 1f)
                     {
-                        //Double click less than 3s to deselect
+                        //Deselect
                         selectedBodyParts.Remove(bodyPart);
                         dragOffsets.Remove(bodyPart);
 
-                        //Count
+                        //Label
                         labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                     }
                 }
@@ -138,11 +148,11 @@ public class BodyPartsScript : MonoBehaviour
                         selectedBodyParts.Add(bodyPart);
                         dragOffsets[bodyPart] = Vector3.zero;
 
-                        //Label
+                        // Update label with the selected body part's name
                         labelText.text = "Selected Part: " + bodyPart.name;
                     }
                 }
-                lastClickTime = currentTime;
+                lastClickTime = currentTime; // Update last click time
             }
         }
 
@@ -164,6 +174,105 @@ public class BodyPartsScript : MonoBehaviour
         {
             StopDrag();
         }
+    }
+
+        // Isolate function to zoom and deactivate other body parts
+        public void Isolate()
+    {
+        if (isZooming || selectedBodyParts.Count == 0) return;
+
+        StartCoroutine(IsolateCoroutine());
+    }
+
+    private IEnumerator IsolateCoroutine()
+    {
+        isZooming = true;
+        // Save the current camera position and size for later Deisolate
+        Vector3 originalPos = mainCamera.transform.position;
+        float originalSize = mainCamera.orthographicSize;
+
+        // Zoom in
+        Vector3 targetPosition;
+        if (isMultiSelect)
+        {
+            // If Multi Select is on, find the center of selected body parts
+            targetPosition = CalculateCenterPoint(selectedBodyParts);
+        }
+        else
+        {
+            // If Single Select is on, isolate the last touched body part
+            targetPosition = selectedBodyParts[selectedBodyParts.Count - 1].transform.position;
+        }
+
+        yield return ZoomToPosition(targetPosition, targetOrthographicSize);
+
+        // Deactivate all other body parts
+        foreach (GameObject part in bodyParts)
+        {
+            part.SetActive(false);
+        }
+
+        // Activate only the selected body parts
+        foreach (GameObject selectedPart in selectedBodyParts)
+        {
+            selectedPart.SetActive(true);
+        }
+
+        isZooming = false;
+    }
+
+    // Deisolate function to return camera to original position and size
+    public void Deisolate()
+    {
+        StartCoroutine(DeisolateCoroutine());
+    }
+
+    private IEnumerator DeisolateCoroutine()
+    {
+        isZooming = true;
+
+        // Reactivate all body parts
+        foreach (GameObject part in bodyParts)
+        {
+            part.SetActive(true);
+        }
+
+        // Zoom back to the original camera position and size
+        yield return ZoomToPosition(originalCameraPosition, originalCameraSize);
+
+        isZooming = false;
+    }
+
+    // Zoom to a target position and size
+    private IEnumerator ZoomToPosition(Vector3 targetPosition, float targetSize)
+    {
+        float elapsedTime = 0f;
+        Vector3 startPosition = mainCamera.transform.position;
+        float startSize = mainCamera.orthographicSize;
+
+        while (elapsedTime < zoomDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            mainCamera.transform.position = Vector3.Lerp(startPosition, new Vector3(targetPosition.x, targetPosition.y, startPosition.z), elapsedTime / zoomDuration);
+            mainCamera.orthographicSize = Mathf.Lerp(startSize, targetSize, elapsedTime / zoomDuration);
+            yield return null;
+        }
+
+        mainCamera.transform.position = new Vector3(targetPosition.x, targetPosition.y, startPosition.z);
+        mainCamera.orthographicSize = targetSize;
+    }
+
+    // Helper function to calculate the center point of selected body parts
+    private Vector3 CalculateCenterPoint(List<GameObject> objects)
+    {
+        if (objects.Count == 1) return objects[0].transform.position;
+
+        Bounds bounds = new Bounds(objects[0].transform.position, Vector3.zero);
+        foreach (GameObject obj in objects)
+        {
+            bounds.Encapsulate(obj.transform.position);
+        }
+        return bounds.center;
     }
 
     //Drag func

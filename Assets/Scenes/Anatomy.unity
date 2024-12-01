@@ -1227,7 +1227,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1241567459}
         m_TargetAssemblyTypeName: BodyPartsScript, Assembly-CSharp
-        m_MethodName: DeIsolate
+        m_MethodName: Deisolate
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1608,7 +1608,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1241567459}
         m_TargetAssemblyTypeName: BodyPartsScript, Assembly-CSharp
-        m_MethodName: IsolateSelectedParts
+        m_MethodName: Isolate
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2310,17 +2310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 833620201}
-  minZoom: 0.05
-  maxZoom: 1.5
-  panSensitivity: 1.5
-  zoomSensitivity: 0.4
-  panThreshold: 2
-  zoomThreshold: 1
-  smoothSpeed: 0.1
   models: {fileID: 553028899}
-  rotationSpeed: 2
-  sensitivityMultiplierMouse: 0.75
-  sensitivityMultiplierTouch: 0.2
 --- !u!114 &1241567457
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2358,13 +2348,14 @@ MonoBehaviour:
   bodyParts: []
   labelText: {fileID: 1561770048}
   selectedBodyPart: {fileID: 0}
-  dragSensitivity: 0.5
   isDragging: 0
   isTouchingMovable: 0
   singleSelectToggle: {fileID: 1155769780}
   multiSelectToggle: {fileID: 1345779836}
   isMultiSelect: 0
   selectedBodyParts: []
+  targetOrthographicSize: 0.25
+  zoomDuration: 0.5
 --- !u!114 &1241567460
 MonoBehaviour:
   m_ObjectHideFlags: 0
