@@ -2346,15 +2346,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 833620201}
   bodyParts: []
-  labelText: {fileID: 1561770048}
   selectedBodyPart: {fileID: 0}
   isDragging: 0
   isTouchingMovable: 0
+  labelText: {fileID: 1561770048}
   singleSelectToggle: {fileID: 1155769780}
   multiSelectToggle: {fileID: 1345779836}
   isMultiSelect: 0
   selectedBodyParts: []
-  targetOrthographicSize: 0.25
+  targetOrthographicSize: 0.2
   zoomDuration: 0.5
 --- !u!114 &1241567460
 MonoBehaviour:

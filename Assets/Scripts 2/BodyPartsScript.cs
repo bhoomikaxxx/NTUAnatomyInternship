@@ -19,13 +19,14 @@ public class BodyPartsScript : MonoBehaviour
 
     [Header("Models")]
     public List<GameObject> bodyParts = new List<GameObject>();
-
-    [Header("Text")]
-    public TMP_Text labelText;
+    private List<GameObject> previouslyActiveBodyParts = new List<GameObject>();
 
     public GameObject selectedBodyPart = null;
     public bool isDragging = false;
     public bool isTouchingMovable = false;
+
+    [Header("Text")]
+    public TMP_Text labelText;
 
     [Header("Toggles")]
     public Toggle singleSelectToggle;
@@ -46,7 +47,7 @@ public class BodyPartsScript : MonoBehaviour
     //Camera zoom settings
     private Vector3 originalCameraPosition;
     private float originalCameraSize;
-    public float targetOrthographicSize = 0.5f;  
+    public float targetOrthographicSize = 0.2f;  
     public float zoomDuration = 0.5f;  
     private bool isZooming = false;
 
@@ -148,7 +149,7 @@ public class BodyPartsScript : MonoBehaviour
                         selectedBodyParts.Add(bodyPart);
                         dragOffsets[bodyPart] = Vector3.zero;
 
-                        // Update label with the selected body part's name
+                        //Update label
                         labelText.text = "Selected Part: " + bodyPart.name;
                     }
                 }
@@ -176,74 +177,97 @@ public class BodyPartsScript : MonoBehaviour
         }
     }
 
-        // Isolate function to zoom and deactivate other body parts
-        public void Isolate()
+
+    //Isolate func
+    public void Isolate()
     {
+        //Check for body parts
         if (isZooming || selectedBodyParts.Count == 0) return;
 
+        //Store initially active body parts in a list
+        //Not working?
+        previouslyActiveBodyParts.Clear();
+        foreach (GameObject part in bodyParts)
+        {
+            if (part.activeSelf && !selectedBodyParts.Contains(part))
+            {
+                previouslyActiveBodyParts.Add(part);
+            }
+        }
+
+        //Isolate logic
         StartCoroutine(IsolateCoroutine());
     }
 
+    //Isolate logic
     private IEnumerator IsolateCoroutine()
     {
         isZooming = true;
-        // Save the current camera position and size for later Deisolate
-        Vector3 originalPos = mainCamera.transform.position;
-        float originalSize = mainCamera.orthographicSize;
 
-        // Zoom in
-        Vector3 targetPosition;
-        if (isMultiSelect)
-        {
-            // If Multi Select is on, find the center of selected body parts
-            targetPosition = CalculateCenterPoint(selectedBodyParts);
-        }
-        else
-        {
-            // If Single Select is on, isolate the last touched body part
-            targetPosition = selectedBodyParts[selectedBodyParts.Count - 1].transform.position;
-        }
+        //Calc center pos & ortho size
+        Vector3 centerPosition = CalculateCenterPoint(selectedBodyParts);
+        float targetSize = CalculateRequiredZoom(selectedBodyParts, centerPosition);
 
-        yield return ZoomToPosition(targetPosition, targetOrthographicSize);
+        yield return ZoomToPosition(centerPosition, targetSize);
 
-        // Deactivate all other body parts
+        //Set body parts inactive
+        //Not working?
         foreach (GameObject part in bodyParts)
         {
-            part.SetActive(false);
-        }
-
-        // Activate only the selected body parts
-        foreach (GameObject selectedPart in selectedBodyParts)
-        {
-            selectedPart.SetActive(true);
+            if (!selectedBodyParts.Contains(part))
+            {
+                part.SetActive(false);
+            }
         }
 
         isZooming = false;
     }
 
-    // Deisolate function to return camera to original position and size
+    //Calc zoom logic
+    private float CalculateRequiredZoom(List<GameObject> objects, Vector3 centerPosition)
+    {
+        float maxDistance = 0f;
+
+        //Calculate the max distance from center to obj
+        foreach (GameObject obj in objects)
+        {
+            float distance = Vector3.Distance(centerPosition, obj.transform.position);
+            if (distance > maxDistance)
+            {
+                maxDistance = distance;
+            }
+        }
+
+        //Adjust ortho size 
+        //Alter to screen size + add padding
+        return (maxDistance / mainCamera.aspect) * 3f;
+    }
+
+    //Deisolate func
     public void Deisolate()
     {
         StartCoroutine(DeisolateCoroutine());
     }
 
+    //Deisolate logic
     private IEnumerator DeisolateCoroutine()
     {
         isZooming = true;
 
-        // Reactivate all body parts
-        foreach (GameObject part in bodyParts)
+        //Reactivate prev active body parts
+        //Not working?
+        foreach (GameObject part in previouslyActiveBodyParts)
         {
             part.SetActive(true);
         }
 
-        // Zoom back to the original camera position and size
+        //Zoom back to the original cam pos and size
         yield return ZoomToPosition(originalCameraPosition, originalCameraSize);
 
         isZooming = false;
     }
 
-    // Zoom to a target position and size
+    //Zoom to a target pos and size (for isolate)
     private IEnumerator ZoomToPosition(Vector3 targetPosition, float targetSize)
     {
         float elapsedTime = 0f;
@@ -262,7 +286,7 @@ public class BodyPartsScript : MonoBehaviour
         mainCamera.orthographicSize = targetSize;
     }
 
-    // Helper function to calculate the center point of selected body parts
+    //Calc center point for zoom 
     private Vector3 CalculateCenterPoint(List<GameObject> objects)
     {
         if (objects.Count == 1) return objects[0].transform.position;
