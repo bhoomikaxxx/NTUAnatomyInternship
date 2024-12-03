@@ -188,10 +188,10 @@ public class BodyPartsScript : MonoBehaviour
     {
         //Check for body parts
         if (isZooming || selectedBodyParts.Count == 0) return;
+        previouslyActiveBodyParts.Clear();
 
         //Store initially active body parts in a list
         //Not working?
-        previouslyActiveBodyParts.Clear();
         foreach (GameObject part in bodyParts)
         {
             if (part.activeSelf && !selectedBodyParts.Contains(part))
@@ -224,7 +224,6 @@ public class BodyPartsScript : MonoBehaviour
                 part.SetActive(false);
             }
         }
-
         isZooming = false;
     }
 
