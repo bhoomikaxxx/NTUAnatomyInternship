@@ -94,7 +94,7 @@ public class Controller : MonoBehaviour
                 currentAction = CameraAction.Panning;
             }
         }
-        else if (Input.GetMouseButton(2)) // Middle Mouse Button for panning
+        else if (Input.GetMouseButton(2)) 
         {
             currentAction = CameraAction.Panning;
             PanCamera();
@@ -182,13 +182,16 @@ public class Controller : MonoBehaviour
             Debug.Log("zooming");
         }
         //Pan logic
-        else if ((touchZero.deltaPosition - touchOne.deltaPosition).magnitude > 2.0f)
+        else if ((touchZero.deltaPosition - touchOne.deltaPosition).magnitude < 2.0f)
         {
-            Debug.Log("panning");
-            Vector3 panDelta = mainCamera.ScreenToWorldPoint(touchZero.position) - mainCamera.ScreenToWorldPoint(touchZeroPrevPos);
-            mainCamera.transform.position += panDelta * 1.5f * Time.deltaTime;
+            Vector2 averageDelta = (touchZero.deltaPosition + touchOne.deltaPosition) * 0.5f;
+            Vector3 panDelta = new Vector3(-averageDelta.x, -averageDelta.y, 0f);
+
+            panDelta *= Time.deltaTime * 0.025f; 
+            panDelta = mainCamera.ScreenToWorldPoint(mainCamera.transform.position + panDelta) - mainCamera.transform.position;
+
+            mainCamera.transform.position -= panDelta;
             currentAction = CameraAction.Panning;
-            Debug.Log("panning");
         }
     }
 

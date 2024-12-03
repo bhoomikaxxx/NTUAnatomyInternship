@@ -3,6 +3,11 @@
  * Date: 30 September 2024
  * Description: Script for touching an individual body part and dragging in 3D space with camera zoom functionality [NOT IN USE]
  */
+/*
+ * Name: Bhoomika Manot
+ * Date: 1 Dec 2024
+ * Description: Script for isolating body part with camera zoom functionality 
+ */
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
