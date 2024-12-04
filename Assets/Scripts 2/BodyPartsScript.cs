@@ -43,18 +43,10 @@ public class BodyPartsScript : MonoBehaviour
     public Dictionary<GameObject, Vector3> dragOffsets = new Dictionary<GameObject, Vector3>();
 
     //Undo script ref
-    private UndoScript historyManager;
+    //private UndoScript historyManager;
 
     //Double click deselect for multi select
     private float lastClickTime = 0f;
-    //private const float doubleClickThreshold = 2f;
-
-    //Camera zoom settings
-    /*private Vector3 originalCameraPosition;
-    private float originalCameraSize;
-    public float targetOrthographicSize = 0.2f;  
-    public float zoomDuration = 0.5f;  
-    private bool isZooming = false; */
 
     public void Awake()
     {
@@ -64,12 +56,8 @@ public class BodyPartsScript : MonoBehaviour
             mainCamera = Camera.main;
         }
 
-        //Initial camera pos and size
-        //originalCameraPosition = mainCamera.transform.position;
-        //originalCameraSize = mainCamera.orthographicSize;
-
         //Ref to Undo script
-        historyManager = FindObjectOfType<UndoScript>();
+        //historyManager = FindObjectOfType<UndoScript>();
 
         //Add single select toggle
         if (singleSelectToggle != null)
@@ -78,9 +66,9 @@ public class BodyPartsScript : MonoBehaviour
             {
                 if (value)
                 {
-                    //Multi select is OFF when single select is on
                     isMultiSelect = false;
                     multiSelectToggle.isOn = false;
+                    ClearOutlines();
                 }
             });
         }
@@ -92,9 +80,9 @@ public class BodyPartsScript : MonoBehaviour
             {
                 if (value)
                 {
-                    //Single select is OFF when multi select is on
                     isMultiSelect = true;
                     singleSelectToggle.isOn = false;
+                    ClearOutlines();
                 }
             });
         }
@@ -123,7 +111,6 @@ public class BodyPartsScript : MonoBehaviour
                     GameObject bodyPart = hit.collider.gameObject;
                     Debug.Log("Collider working");
 
-
                     //Check for time between clicks 
                     float currentTime = Time.time;
 
@@ -135,7 +122,7 @@ public class BodyPartsScript : MonoBehaviour
                             //Deselect
                             selectedBodyParts.Remove(bodyPart);
                             dragOffsets.Remove(bodyPart);
-
+                            RemoveOutline(bodyPart);
                             //Label
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
@@ -147,6 +134,7 @@ public class BodyPartsScript : MonoBehaviour
                         {
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
+                            OutlineSelected(bodyPart);
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
                         //Single select add
@@ -156,12 +144,13 @@ public class BodyPartsScript : MonoBehaviour
                             dragOffsets.Clear();
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-
+                            ClearOutlines();
+                            OutlineSelected(bodyPart);
                             //Update label
                             labelText.text = "Selected Part: " + bodyPart.name;
                         }
                     }
-                    lastClickTime = currentTime; // Update last click time
+                    lastClickTime = currentTime; 
                 }
             }
         }
@@ -171,7 +160,7 @@ public class BodyPartsScript : MonoBehaviour
         {
             if (!isDragging && selectedBodyParts.Count > 0)
             {
-                Drag(); 
+                Drag();
             }
 
             if (isDragging)
@@ -187,126 +176,40 @@ public class BodyPartsScript : MonoBehaviour
         }
     }
 
-
-    //Isolate func
-    /*public void Isolate()
+    // Outline a selected body part
+    private void OutlineSelected(GameObject bodyPart)
     {
-        //Check for body parts
-        if (isZooming || selectedBodyParts.Count == 0) return;
-        previouslyActiveBodyParts.Clear();
-
-        //Store initially active body parts in a list
-        //Not working?
-        foreach (GameObject part in bodyParts)
+        var outline = bodyPart.GetComponent<Outline>();
+        if (outline == null)
         {
-            if (part.activeSelf && !selectedBodyParts.Contains(part))
-            {
-                previouslyActiveBodyParts.Add(part);
-            }
+            outline = bodyPart.AddComponent<Outline>();
+            outline.OutlineColor = Color.magenta;
+            outline.OutlineWidth = 6.0f;
+            outline.OutlineMode = Outline.Mode.OutlineAll;
+            outline.GetComponent<Renderer>().material.SetInt("_ZWrite", 100);
+            //outline.GetComponent<Renderer>().material.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
         }
-
-        //Isolate logic
-        StartCoroutine(IsolateCoroutine());
+        outline.enabled = true;
     }
 
-    //Isolate logic
-    private IEnumerator IsolateCoroutine()
+    // Remove outline from a body part
+    private void RemoveOutline(GameObject bodyPart)
     {
-        isZooming = true;
-
-        //Calc center pos & ortho size
-        Vector3 centerPosition = CalculateCenterPoint(selectedBodyParts);
-        float targetSize = CalculateRequiredZoom(selectedBodyParts, centerPosition);
-
-        yield return ZoomToPosition(centerPosition, targetSize);
-
-        //Set body parts inactive
-        //Not working?
-        foreach (GameObject part in bodyParts)
+        var outline = bodyPart.GetComponent<Outline>();
+        if (outline != null)
         {
-            if (!selectedBodyParts.Contains(part))
-            {
-                part.SetActive(false);
-            }
+            Destroy(outline);
         }
-        isZooming = false;
     }
 
-    //Calc zoom logic
-    private float CalculateRequiredZoom(List<GameObject> objects, Vector3 centerPosition)
+    // Clear outlines from all selected body parts
+    private void ClearOutlines()
     {
-        float maxDistance = 0f;
-
-        //Calculate the max distance from center to obj
-        foreach (GameObject obj in objects)
+        foreach (GameObject bodyPart in selectedBodyParts)
         {
-            float distance = Vector3.Distance(centerPosition, obj.transform.position);
-            if (distance > maxDistance)
-            {
-                maxDistance = distance;
-            }
+            RemoveOutline(bodyPart);
         }
-
-        //Adjust ortho size 
-        //Alter to screen size + add padding
-        return (maxDistance / mainCamera.aspect) * 3f;
     }
-
-    //Deisolate func
-    public void Deisolate()
-    {
-        StartCoroutine(DeisolateCoroutine());
-    }
-
-    //Deisolate logic
-    private IEnumerator DeisolateCoroutine()
-    {
-        isZooming = true;
-
-        //Reactivate prev active body parts
-        //Not working?
-        foreach (GameObject part in previouslyActiveBodyParts)
-        {
-            part.SetActive(true);
-        }
-
-        //Zoom back to the original cam pos and size
-        yield return ZoomToPosition(originalCameraPosition, originalCameraSize);
-
-        isZooming = false;
-    }
-
-    //Zoom to a target pos and size (for isolate)
-    private IEnumerator ZoomToPosition(Vector3 targetPosition, float targetSize)
-    {
-        float elapsedTime = 0f;
-        Vector3 startPosition = mainCamera.transform.position;
-        float startSize = mainCamera.orthographicSize;
-
-        while (elapsedTime < zoomDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            mainCamera.transform.position = Vector3.Lerp(startPosition, new Vector3(targetPosition.x, targetPosition.y, startPosition.z), elapsedTime / zoomDuration);
-            mainCamera.orthographicSize = Mathf.Lerp(startSize, targetSize, elapsedTime / zoomDuration);
-            yield return null;
-        }
-
-        mainCamera.transform.position = new Vector3(targetPosition.x, targetPosition.y, startPosition.z);
-        mainCamera.orthographicSize = targetSize;
-    }
-
-    //Calc center point for zoom 
-    private Vector3 CalculateCenterPoint(List<GameObject> objects)
-    {
-        if (objects.Count == 1) return objects[0].transform.position;
-
-        Bounds bounds = new Bounds(objects[0].transform.position, Vector3.zero);
-        foreach (GameObject obj in objects)
-        {
-            bounds.Encapsulate(obj.transform.position);
-        }
-        return bounds.center;
-    }*/
 
     //Drag func
     public void Drag()
@@ -330,7 +233,7 @@ public class BodyPartsScript : MonoBehaviour
         // Record the final position and rotation of all selected body parts
         foreach (GameObject bodyPart in selectedBodyParts)
         {
-            historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
+            //historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
         }
 
         selectedBodyPart = null;

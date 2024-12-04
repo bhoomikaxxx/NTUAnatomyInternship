@@ -14,47 +14,52 @@ using System.Linq;
 
 public class UndoScript : MonoBehaviour
 {
-    //Declarations
-    //[Header("Text")]
-    public TMP_Text labelText;
 
-    //List of history movements of the model and parts
-    private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
+}
 
-    //Recording values if changed
-    public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
+
+
+//Declarations
+/*//[Header("Text")]
+public TMP_Text labelText;
+
+//List of history movements of the model and parts
+private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
+
+//Recording values if changed
+public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
+{
+    //Get initial values
+    if (globalMovementHistory.Count == 0 ||
+        globalMovementHistory.Peek().position != position ||
+        globalMovementHistory.Peek().rotation != rotation)
     {
-        //Get initial values
-        if (globalMovementHistory.Count == 0 ||
-            globalMovementHistory.Peek().position != position ||
-            globalMovementHistory.Peek().rotation != rotation)
-        {
-            //Add additional values
-            globalMovementHistory.Push((bodyPart, position, rotation));
-            Debug.Log($"[RECORD] Recorded state: {bodyPart.name} at position: {position}, rotation: {rotation}");
-        }
-    }
-
-    public void UndoLastState()
-    {
-        //Check for recorded data
-        if (globalMovementHistory.Count > 0)
-        {
-            //Remove last data and return to prev data
-            globalMovementHistory.Pop();
-            var lastState = globalMovementHistory.Peek();
-            lastState.bodyPart.transform.position = lastState.position;
-            lastState.bodyPart.transform.rotation = lastState.rotation;
-            Debug.Log($"[UNDO] Reverted to state: {lastState.bodyPart.name} at position: {lastState.position}, rotation: {lastState.rotation}");
-
-        }
-        else
-        {
-            //Label
-            labelText.text = "Cannot undo";
-        }
+        //Add additional values
+        globalMovementHistory.Push((bodyPart, position, rotation));
+        Debug.Log($"[RECORD] Recorded state: {bodyPart.name} at position: {position}, rotation: {rotation}");
     }
 }
+
+public void UndoLastState()
+{
+    //Check for recorded data
+    if (globalMovementHistory.Count > 0)
+    {
+        //Remove last data and return to prev data
+        globalMovementHistory.Pop();
+        var lastState = globalMovementHistory.Peek();
+        lastState.bodyPart.transform.position = lastState.position;
+        lastState.bodyPart.transform.rotation = lastState.rotation;
+        Debug.Log($"[UNDO] Reverted to state: {lastState.bodyPart.name} at position: {lastState.position}, rotation: {lastState.rotation}");
+
+    }
+    else
+    {
+        //Label
+        labelText.text = "Cannot undo";
+    }
+}
+}*/
 
 
 /*private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();

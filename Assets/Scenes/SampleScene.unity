@@ -1526,7 +1526,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2000294189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1892,6 +1892,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Joints
       objectReference: {fileID: 0}
+    - target: {fileID: 9008675697178696332, guid: 726dcb68b7f3f4203be084dc83da2927,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2046,6 +2051,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: HumanBody
       objectReference: {fileID: 0}
+    - target: {fileID: 1427816300448889020, guid: 7cfbab163e1424e84a4632a5d39f98b5,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4921444099380434604, guid: 7cfbab163e1424e84a4632a5d39f98b5,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2164,6 +2174,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: VisceralSystems
       objectReference: {fileID: 0}
+    - target: {fileID: 6889047871597122295, guid: f4f76dede2a174ae8bb7c228dee5adfc,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2181,6 +2196,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: NervousSystem
+      objectReference: {fileID: 0}
+    - target: {fileID: 7269081712131086403, guid: 55846ab0d86984568b5bf54cc12a2a8f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8032868138238013350, guid: 55846ab0d86984568b5bf54cc12a2a8f,
         type: 3}
@@ -2250,6 +2270,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: MuscularSystem
       objectReference: {fileID: 0}
+    - target: {fileID: 3306083555767266613, guid: 1333bf264c91c481c9275cb6951c478c,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4986496322869503166, guid: 1333bf264c91c481c9275cb6951c478c,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2317,6 +2342,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: LymphoidOrgans
+      objectReference: {fileID: 0}
+    - target: {fileID: 1256277001897968597, guid: 8ac3491e5a88c4496940ae59ec529a0f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8915615336820384998, guid: 8ac3491e5a88c4496940ae59ec529a0f,
         type: 3}
@@ -2435,6 +2465,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Cardiovascular
+      objectReference: {fileID: 0}
+    - target: {fileID: 4628679951054202031, guid: c1e7637331cc74ac6b13fa21a1a99c68,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
