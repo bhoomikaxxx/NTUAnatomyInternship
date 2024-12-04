@@ -326,6 +326,13 @@ public class BodyPartsScript : MonoBehaviour
     public void StopDrag()
     {
         isDragging = false;
+
+        // Record the final position and rotation of all selected body parts
+        foreach (GameObject bodyPart in selectedBodyParts)
+        {
+            historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
+        }
+
         selectedBodyPart = null;
     }
 

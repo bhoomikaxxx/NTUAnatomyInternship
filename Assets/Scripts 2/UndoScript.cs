@@ -14,7 +14,10 @@ using System.Linq;
 
 public class UndoScript : MonoBehaviour
 {
-    ///Declarations
+    //Declarations
+    //[Header("Text")]
+    public TMP_Text labelText;
+
     //List of history movements of the model and parts
     private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
 
@@ -38,9 +41,17 @@ public class UndoScript : MonoBehaviour
         if (globalMovementHistory.Count > 0)
         {
             //Remove last data and return to prev data
-            var lastState = globalMovementHistory.Pop();
+            globalMovementHistory.Pop();
+            var lastState = globalMovementHistory.Peek();
             lastState.bodyPart.transform.position = lastState.position;
             lastState.bodyPart.transform.rotation = lastState.rotation;
+            Debug.Log($"[UNDO] Reverted to state: {lastState.bodyPart.name} at position: {lastState.position}, rotation: {lastState.rotation}");
+
+        }
+        else
+        {
+            //Label
+            labelText.text = "Cannot undo";
         }
     }
 }
