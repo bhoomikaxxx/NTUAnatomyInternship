@@ -35,16 +35,22 @@ public class Controller : MonoBehaviour
     private Vector2 currentDelta;
     private bool isRotating = false;
 
+    //Undo script
+    private UndoScript historyManager;
+
     //Cam states
     private enum CameraAction { None, Panning, Zooming, Rotating }
     private CameraAction currentAction = CameraAction.None;
 
-    void Start()
+    private void Awake()
     {
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
         }
+
+        //Reference to undo script
+        historyManager = FindObjectOfType<UndoScript>();
     }
 
     void Update()
@@ -57,23 +63,23 @@ public class Controller : MonoBehaviour
 
         if (Input.touchCount == 2)
         {
-            CameraMovementTouch();
+            Touch();
             currentAction = CameraAction.Zooming; 
         }
         else if (Input.touchCount == 1 && currentAction != CameraAction.Zooming)
         {
             currentAction = CameraAction.Rotating;
-            RotateUpdate();
+            Rotate();
         }
         else if (Input.GetMouseButton(2))
         {
-            CameraMovementMousePan();
+            MousePan();
             currentAction = CameraAction.Panning;
         }
         else if (Input.GetMouseButton(1))
         {
             currentAction = CameraAction.Rotating;
-            RotateUpdate();
+            Rotate();
         }
         //Zoom
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -85,7 +91,7 @@ public class Controller : MonoBehaviour
     }
 
     //Touch cam logic
-    void CameraMovementTouch()
+    void Touch()
     {
         //Get touch pos
         Touch touchZero = Input.GetTouch(0);
@@ -116,12 +122,12 @@ public class Controller : MonoBehaviour
             Vector3 panStartPos = mainCamera.ScreenToWorldPoint(new Vector3(currentMidpoint.x, currentMidpoint.y, mainCamera.nearClipPlane));
             Vector3 panEndPos = mainCamera.ScreenToWorldPoint(new Vector3(prevMidpoint.x, prevMidpoint.y, mainCamera.nearClipPlane));
             Vector3 panDirection = panEndPos - panStartPos;
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, mainCamera.transform.position + panDirection * 1.25f, 0.1f);
+            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, mainCamera.transform.position + panDirection * 1.25f, 0.15f);
         }
     }
 
     //Cam mouse pan via middle click btn
-    void CameraMovementMousePan()
+    void MousePan()
     {
         if (Input.GetMouseButtonDown(2))
         {
@@ -142,7 +148,7 @@ public class Controller : MonoBehaviour
     }
 
     //Rotate func
-    void RotateUpdate()
+    void Rotate()
     {
         if (currentAction == CameraAction.Rotating)
         {
@@ -156,6 +162,9 @@ public class Controller : MonoBehaviour
                 {
                     isRotating = true;
                     previousTouchPosition = touch.position;
+
+                    //Record initial rotation
+                    historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
                 }
                 //Rotate logic
                 else if (touch.phase == TouchPhase.Moved && isRotating)
@@ -178,6 +187,9 @@ public class Controller : MonoBehaviour
             {
                 isRotating = true;
                 previousTouchPosition = Input.mousePosition;
+
+                //Record initial rotation
+                historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
             }
             //Rotate logic
             else if (Input.GetMouseButton(1) && isRotating)

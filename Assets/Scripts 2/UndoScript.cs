@@ -14,46 +14,33 @@ using System.Linq;
 
 public class UndoScript : MonoBehaviour
 {
-    //Dictionary of body parts moved
-    private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> movementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
-    private bool stopRecording = false; 
+    ///Declarations
+    //List of history movements of the model and parts
+    private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
 
-    //Recording func
+    //Recording values if changed
     public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
     {
-        //Stop re recording when undo is clicked to prevent duplicated state
-        if (stopRecording) return; 
-
-        if (movementHistory.Count == 0 ||
-            movementHistory.Peek().position != position ||
-            movementHistory.Peek().rotation != rotation)
+        //Get initial values
+        if (globalMovementHistory.Count == 0 ||
+            globalMovementHistory.Peek().position != position ||
+            globalMovementHistory.Peek().rotation != rotation)
         {
-            movementHistory.Push((bodyPart, position, rotation));
-            Debug.Log($"Recorded: {bodyPart.name} pos: {position}, r: {rotation}");
+            //Add additional values
+            globalMovementHistory.Push((bodyPart, position, rotation));
+            Debug.Log($"[RECORD] Recorded state: {bodyPart.name} at position: {position}, rotation: {rotation}");
         }
     }
 
-    //Undo func
     public void UndoLastState()
     {
-        //Check for history
-        if (movementHistory.Count > 1)
+        //Check for recorded data
+        if (globalMovementHistory.Count > 0)
         {
-            stopRecording = true;
-
-            //Remove latest record
-            movementHistory.Pop();
-
-            //Check for prev record
-            var previousState = movementHistory.Peek();
-
-            //Undo to prev pos & r
-            previousState.bodyPart.transform.position = previousState.position;
-            previousState.bodyPart.transform.rotation = previousState.rotation;
-
-            Debug.Log($"Reversed: {previousState.bodyPart.name} pos: {previousState.position}, r: {previousState.rotation}");
-
-            stopRecording = false; 
+            //Remove last data and return to prev data
+            var lastState = globalMovementHistory.Pop();
+            lastState.bodyPart.transform.position = lastState.position;
+            lastState.bodyPart.transform.rotation = lastState.rotation;
         }
     }
 }
