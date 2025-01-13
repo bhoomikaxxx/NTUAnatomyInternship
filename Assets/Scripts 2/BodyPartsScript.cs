@@ -111,7 +111,7 @@ public class BodyPartsScript : MonoBehaviour
                 {
                     isMultiSelect = false;
                     multiSelectToggle.isOn = false;
-                    ClearOutlines();
+                    ClearColours();
                 }
             });
         }
@@ -125,7 +125,7 @@ public class BodyPartsScript : MonoBehaviour
                 {
                     isMultiSelect = true;
                     singleSelectToggle.isOn = false;
-                    ClearOutlines();
+                    ClearColours();
                 }
             });
         }
@@ -164,7 +164,7 @@ public class BodyPartsScript : MonoBehaviour
                             //Deselect
                             selectedBodyParts.Remove(bodyPart);
                             dragOffsets.Remove(bodyPart);
-                            RemoveOutline(bodyPart);
+                            ClearColours();
                             //Label
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
@@ -176,7 +176,7 @@ public class BodyPartsScript : MonoBehaviour
                         {
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            OutlineSelected(bodyPart);
+                            ChangeColor(bodyPart, ColorUtility.TryParseHtmlString("#EFEFEF", out Color selectedColor) ? selectedColor : Color.white);
 
                             //Update label
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
@@ -188,8 +188,8 @@ public class BodyPartsScript : MonoBehaviour
                             dragOffsets.Clear();
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            ClearOutlines();
-                            OutlineSelected(bodyPart);
+                            ClearColours();
+                            ChangeColor(bodyPart, ColorUtility.TryParseHtmlString("#EFEFEF", out Color selectedColor) ? selectedColor : Color.white);
 
                             //Update label
                             labelText.text = "Selected Part: " + bodyPart.name;
@@ -224,35 +224,29 @@ public class BodyPartsScript : MonoBehaviour
     }
 
     //Outline func
-    private void OutlineSelected(GameObject bodyPart)
+    private void ChangeColor(GameObject bodyPart, Color color)
     {
-        var outline = bodyPart.GetComponent<Outline>();
-        if (outline == null)
+        Renderer renderer = bodyPart.GetComponent<Renderer>();
+        if (renderer != null)
         {
-            outline = bodyPart.AddComponent<Outline>();
-            outline.OutlineColor = Color.magenta;
-            outline.OutlineWidth = 8.0f;
-            outline.OutlineMode = Outline.Mode.OutlineAll;
-            outline.GetComponent<Renderer>().material.SetInt("_ZWrite", 100);
-        }
-        outline.enabled = true;
-    }
-
-    //Remove outline 
-    private void RemoveOutline(GameObject bodyPart)
-    {
-        var outline = bodyPart.GetComponent<Outline>();
-        if (outline != null)
-        {
-            Destroy(outline);
+            renderer.material.color = color;
         }
     }
 
-    private void ClearOutlines()
+    public void ResetColour(GameObject bodyPart)
+    {
+        Renderer renderer = bodyPart.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            renderer.material.color = ColorUtility.TryParseHtmlString("#B2AFAF", out Color defaultColor) ? defaultColor : Color.gray;
+        }
+    }
+
+    public void ClearColours()
     {
         foreach (GameObject bodyPart in selectedBodyParts)
         {
-            RemoveOutline(bodyPart);
+            ResetColour(bodyPart);
         }
     }
 

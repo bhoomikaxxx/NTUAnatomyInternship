@@ -102,6 +102,7 @@ public class ResetScript : MonoBehaviour
         {
             GameObject part = entry.Key;
 
+            bodyPartManager.ClearColours();
             bodyPartManager.Deisolate();
 
             part.transform.position = entry.Value;
