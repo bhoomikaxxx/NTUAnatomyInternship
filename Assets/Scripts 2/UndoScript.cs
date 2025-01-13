@@ -14,8 +14,50 @@ using System.Linq;
 
 public class UndoScript : MonoBehaviour
 {
+    //[Header("Text")]
+    public TMP_Text labelText;
 
+    //List of history movements of the model and parts
+    private Stack<(GameObject bodyPart, Vector3 position, Quaternion rotation)> globalMovementHistory = new Stack<(GameObject, Vector3, Quaternion)>();
+
+    //Recording values if changed
+    public void RecordState(GameObject bodyPart, Vector3 position, Quaternion rotation)
+    {
+        //Get initial values
+        if (globalMovementHistory.Count == 0 ||
+            globalMovementHistory.Peek().position != position ||
+            globalMovementHistory.Peek().rotation != rotation)
+        {
+            //Add additional values
+            globalMovementHistory.Push((bodyPart, position, rotation));
+            Debug.Log($"[RECORD] Recorded state: {bodyPart.name} at position: {position}, rotation: {rotation}");
+
+            Debug.Log(globalMovementHistory.Count);
+        }
+    }
+
+    public void UndoLastState()
+    {
+        //Check for recorded data
+        if (globalMovementHistory.Count > 0)
+        {
+            //Remove last data and return to prev data
+            var lastState = globalMovementHistory.Peek();
+            lastState.bodyPart.transform.position = lastState.position;
+            lastState.bodyPart.transform.rotation = lastState.rotation;
+            globalMovementHistory.Pop();
+            Debug.Log($"[UNDO] Reverted to state: {lastState.bodyPart.name} at position: {lastState.position}, rotation: {lastState.rotation}");
+
+        }
+        else
+        {
+            //Label
+            labelText.text = "Cannot undo";
+            return;
+        }
+    }
 }
+
 
 
 

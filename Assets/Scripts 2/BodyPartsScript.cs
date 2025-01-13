@@ -22,10 +22,37 @@ public class BodyPartsScript : MonoBehaviour
     [Header("Camera")]
     public Camera mainCamera;
 
+    //Iso zoom
+    private float zoomDuration = 0.5f;
+    private float targetOrthographicSize = 0.3f; 
+    private float normalOrthographicSize;
+    private bool isZooming = false;
+    private Vector3 initialCameraPosition;
+
+    //Lists
     [Header("Models")]
     public List<GameObject> bodyParts = new List<GameObject>();
+    public List<GameObject> skeletonBodyParts = new List<GameObject>();
+    public List<GameObject> jointsBodyParts = new List<GameObject>();
+    public List<GameObject> lymphoidOrgansBodyParts = new List<GameObject>();
+    public List<GameObject> nervousSystemBodyParts = new List<GameObject>();
+    public List<GameObject> visceralSystemBodyParts = new List<GameObject>();
+    public List<GameObject> cardiovascularBodyParts = new List<GameObject>();
+    public List<GameObject> muscularSystemBodyParts = new List<GameObject>();
+    public List<GameObject> humanBodyParts = new List<GameObject>();
     //private List<GameObject> previouslyActiveBodyParts = new List<GameObject>();
 
+    //Models
+    public GameObject skeletonModel;
+    public GameObject jointsModel;
+    public GameObject loModel;
+    public GameObject nsModel;
+    public GameObject vsModel;
+    public GameObject cardioModel;
+    public GameObject msModel;
+    public GameObject humanModel;
+
+    //Drag
     public GameObject selectedBodyPart = null;
     public bool isDragging = false;
     public bool isTouchingMovable = false;
@@ -37,13 +64,24 @@ public class BodyPartsScript : MonoBehaviour
     public Toggle singleSelectToggle;
     public Toggle multiSelectToggle;
 
-    //Multi select 
+    //Skeleton toggle
+    public Toggle skeleton;
+    public Toggle joints;
+    public Toggle lymphoidOrgans;
+    public Toggle nervousSystem;
+    public Toggle visceralSystem;
+    public Toggle cardiovascular;
+    public Toggle muscularSystem;
+    public Toggle human;
+
+    //Multi select
+    [Header("Multi Select")]
     public bool isMultiSelect = false;
     public List<GameObject> selectedBodyParts = new List<GameObject>();
     public Dictionary<GameObject, Vector3> dragOffsets = new Dictionary<GameObject, Vector3>();
 
     //Undo script ref
-    //private UndoScript historyManager;
+    private UndoScript historyManager;
 
     //Double click deselect for multi select
     private float lastClickTime = 0f;
@@ -56,8 +94,12 @@ public class BodyPartsScript : MonoBehaviour
             mainCamera = Camera.main;
         }
 
+        //Capture original cam to use for deisolation
+        normalOrthographicSize = mainCamera.orthographicSize;
+        initialCameraPosition = mainCamera.transform.position;
+
         //Ref to Undo script
-        //historyManager = FindObjectOfType<UndoScript>();
+        historyManager = FindObjectOfType<UndoScript>();
 
         //Add single select toggle
         if (singleSelectToggle != null)
@@ -73,7 +115,7 @@ public class BodyPartsScript : MonoBehaviour
             });
         }
 
-        // Add multi select toggle
+        //Add multi select toggle
         if (multiSelectToggle != null)
         {
             multiSelectToggle.onValueChanged.AddListener((value) =>
@@ -109,7 +151,6 @@ public class BodyPartsScript : MonoBehaviour
                 if (hit.collider.CompareTag("Movable"))
                 {
                     GameObject bodyPart = hit.collider.gameObject;
-                    Debug.Log("Collider working");
 
                     //Check for time between clicks 
                     float currentTime = Time.time;
@@ -135,6 +176,8 @@ public class BodyPartsScript : MonoBehaviour
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
                             OutlineSelected(bodyPart);
+
+                            //Update label
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
                         //Single select add
@@ -146,6 +189,7 @@ public class BodyPartsScript : MonoBehaviour
                             dragOffsets[bodyPart] = Vector3.zero;
                             ClearOutlines();
                             OutlineSelected(bodyPart);
+
                             //Update label
                             labelText.text = "Selected Part: " + bodyPart.name;
                         }
@@ -169,14 +213,16 @@ public class BodyPartsScript : MonoBehaviour
             }
         }
 
-        //Dragging ended logic
-        if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
+        if (isDragging)
         {
-            StopDrag();
+            if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
+            {
+                StopDrag();
+            }
         }
     }
 
-    // Outline a selected body part
+    //Outline func
     private void OutlineSelected(GameObject bodyPart)
     {
         var outline = bodyPart.GetComponent<Outline>();
@@ -184,15 +230,14 @@ public class BodyPartsScript : MonoBehaviour
         {
             outline = bodyPart.AddComponent<Outline>();
             outline.OutlineColor = Color.magenta;
-            outline.OutlineWidth = 6.0f;
+            outline.OutlineWidth = 8.0f;
             outline.OutlineMode = Outline.Mode.OutlineAll;
             outline.GetComponent<Renderer>().material.SetInt("_ZWrite", 100);
-            //outline.GetComponent<Renderer>().material.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.LessEqual);
         }
         outline.enabled = true;
     }
 
-    // Remove outline from a body part
+    //Remove outline 
     private void RemoveOutline(GameObject bodyPart)
     {
         var outline = bodyPart.GetComponent<Outline>();
@@ -202,7 +247,6 @@ public class BodyPartsScript : MonoBehaviour
         }
     }
 
-    // Clear outlines from all selected body parts
     private void ClearOutlines()
     {
         foreach (GameObject bodyPart in selectedBodyParts)
@@ -219,7 +263,6 @@ public class BodyPartsScript : MonoBehaviour
 
         foreach (GameObject bodyPart in selectedBodyParts)
         {
-            // Calculate drag offsets only when dragging starts
             Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.WorldToScreenPoint(bodyPart.transform.position).z));
             dragOffsets[bodyPart] = bodyPart.transform.position - worldPosition;
         }
@@ -230,13 +273,15 @@ public class BodyPartsScript : MonoBehaviour
     {
         isDragging = false;
 
-        // Record the final position and rotation of all selected body parts
+        //Record the final pos/rotation for undo - not working
         foreach (GameObject bodyPart in selectedBodyParts)
         {
-            //historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
+            historyManager.RecordState(bodyPart, bodyPart.transform.position, bodyPart.transform.rotation);
         }
 
         selectedBodyPart = null;
+        //selectedBodyParts.Clear();
+        dragOffsets.Clear();
     }
 
     //Single movement
@@ -274,6 +319,255 @@ public class BodyPartsScript : MonoBehaviour
             return Input.GetTouch(0).position;
         }
         return Input.mousePosition;
+    }
+
+    //Isolate Function
+    public void Isolate()
+    {
+        if (selectedBodyParts.Count == 0) return;
+
+        /*List<GameObject> toIsolate = bodyParts;
+        foreach(GameObject selected in selectedBodyParts)
+        {
+            toIsolate.Remove(selected);
+        }
+
+        foreach(GameObject isolateObj in toIsolate)
+        {
+            isolateObj.SetActive(false);
+        }*/
+
+        
+        //Skeleton
+        if (skeleton.isOn)
+        {
+            List<GameObject> skeletonToIsolate = skeletonBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                skeletonToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in skeletonToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Joints
+        if (joints.isOn)
+        {
+            List<GameObject> jointsToIsolate = jointsBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                jointsToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in jointsToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Lymphoid Organs
+        if (lymphoidOrgans.isOn)
+        {
+            List<GameObject> loToIsolate = lymphoidOrgansBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                loToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in loToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Nervous System
+        if (nervousSystem.isOn)
+        {
+            List<GameObject> nsToIsolate = nervousSystemBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                nsToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in nsToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Visceral System
+        if (visceralSystem.isOn)
+        {
+            List<GameObject> vsToIsolate = visceralSystemBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                vsToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in vsToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Cardiovascular
+        if (cardiovascular.isOn)
+        {
+            List<GameObject> cardioToIsolate = cardiovascularBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                cardioToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in cardioToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Muscular System
+        if (muscularSystem.isOn)
+        {
+            List<GameObject> muscularToIsolate = muscularSystemBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                muscularToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in muscularToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Human
+        if (human.isOn)
+        {
+            List<GameObject> humanToIsolate = humanBodyParts;
+            foreach (GameObject selected in selectedBodyParts)
+            {
+                humanToIsolate.Remove(selected);
+            }
+
+            foreach (GameObject isolateObj in humanToIsolate)
+            {
+                isolateObj.SetActive(false);
+            }
+        }
+
+        //Target zoom pos
+        Vector3 targetPosition = isMultiSelect ? CalculateCenterPoint(selectedBodyParts) : selectedBodyParts[0].transform.position;
+        StartCoroutine(ZoomToPosition(targetPosition, targetOrthographicSize));
+    }
+
+    public void Deisolate()
+    {   
+        if (skeleton.isOn)
+        {
+            foreach (GameObject isolateObj in skeletonBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (joints.isOn)
+        {
+            foreach (GameObject isolateObj in jointsBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (lymphoidOrgans.isOn)
+        {
+            foreach (GameObject isolateObj in lymphoidOrgansBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (nervousSystem.isOn)
+        {
+            foreach (GameObject isolateObj in nervousSystemBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (visceralSystem.isOn)
+        {
+            foreach (GameObject isolateObj in visceralSystemBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (cardiovascular.isOn)
+        {
+            foreach (GameObject isolateObj in cardiovascularBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (muscularSystem.isOn)
+        {
+            foreach (GameObject isolateObj in muscularSystemBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        if (human.isOn)
+        {
+            foreach (GameObject isolateObj in humanBodyParts)
+            {
+                isolateObj.SetActive(true);
+            }
+        }
+
+        //Original camera pos/size
+        StartCoroutine(ZoomToPosition(initialCameraPosition, normalOrthographicSize));
+    }
+
+    private IEnumerator ZoomToPosition(Vector3 targetPosition, float targetSize)
+    {
+        isZooming = true;
+        float elapsedTime = 0f;
+
+        Vector3 initialPosition = mainCamera.transform.position;
+        float initialSize = mainCamera.orthographicSize;
+
+        Vector3 adjustedTargetPosition = new Vector3(targetPosition.x, targetPosition.y, mainCamera.transform.position.z);
+
+        while (elapsedTime < zoomDuration)
+        {
+            elapsedTime += Time.deltaTime;
+
+            mainCamera.transform.position = Vector3.Lerp(initialPosition, adjustedTargetPosition, elapsedTime / zoomDuration);
+            mainCamera.orthographicSize = Mathf.Lerp(initialSize, targetSize, elapsedTime / zoomDuration);
+
+            yield return null;
+        }
+
+        mainCamera.transform.position = adjustedTargetPosition;
+        mainCamera.orthographicSize = targetSize;
+        isZooming = false;
+    }
+
+    //Center zoom
+    private Vector3 CalculateCenterPoint(List<GameObject> selectedObjects)
+    {
+        Vector3 centerPoint = Vector3.zero;
+        foreach (GameObject obj in selectedObjects)
+        {
+            centerPoint += obj.transform.position;
+        }
+        centerPoint /= selectedObjects.Count;
+        return centerPoint;
     }
 }
 

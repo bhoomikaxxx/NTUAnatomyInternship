@@ -102,10 +102,13 @@ public class ResetScript : MonoBehaviour
         {
             GameObject part = entry.Key;
 
+            bodyPartManager.Deisolate();
+
             part.transform.position = entry.Value;
             part.transform.rotation = initialBodyRotations[part];
 
             ClearSelection();
+            
         }
 
     }
