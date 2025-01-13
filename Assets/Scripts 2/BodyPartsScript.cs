@@ -15,6 +15,7 @@ using Lean.Touch;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Linq;
 
 public class BodyPartsScript : MonoBehaviour
 {
@@ -300,12 +301,15 @@ public class BodyPartsScript : MonoBehaviour
     public void MoveBodyParts(List<GameObject> bodyParts)
     {
         Vector3 screenPosition = GetInputPosition();
+        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(
+            new Vector3(screenPosition.x, screenPosition.y,
+            mainCamera.WorldToScreenPoint(bodyParts[0].transform.position).z));
 
         foreach (GameObject bodyPart in bodyParts)
         {
             if (dragOffsets.TryGetValue(bodyPart, out Vector3 offset))
             {
-                Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.WorldToScreenPoint(bodyPart.transform.position).z));
+                //Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.WorldToScreenPoint(bodyPart.transform.position).z));
                 bodyPart.transform.position = Vector3.Lerp(bodyPart.transform.position, worldPosition + offset, 0.5f);
             }
         }
@@ -326,206 +330,56 @@ public class BodyPartsScript : MonoBehaviour
     {
         if (selectedBodyParts.Count == 0) return;
 
-        /*List<GameObject> toIsolate = bodyParts;
-        foreach(GameObject selected in selectedBodyParts)
+        var isolationMap = new Dictionary<Toggle, List<GameObject>>()
         {
-            toIsolate.Remove(selected);
+            { skeleton, skeletonBodyParts },
+            { joints, jointsBodyParts },
+            { lymphoidOrgans, lymphoidOrgansBodyParts },
+            { nervousSystem, nervousSystemBodyParts },
+            { visceralSystem, visceralSystemBodyParts },
+            { cardiovascular, cardiovascularBodyParts }
+        };
+
+        foreach (var entry in isolationMap)
+        {
+            if (entry.Key.isOn)
+            {
+                // Get the list and exclude selected parts
+                List<GameObject> toIsolate = entry.Value.Except(selectedBodyParts).ToList();
+
+                // Deactivate unselected parts
+                foreach (GameObject obj in toIsolate)
+                {
+                    obj.SetActive(false);
+                }
+            }
         }
-
-        foreach(GameObject isolateObj in toIsolate)
-        {
-            isolateObj.SetActive(false);
-        }*/
-
         
-        //Skeleton
-        if (skeleton.isOn)
-        {
-            List<GameObject> skeletonToIsolate = skeletonBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                skeletonToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in skeletonToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Joints
-        if (joints.isOn)
-        {
-            List<GameObject> jointsToIsolate = jointsBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                jointsToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in jointsToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Lymphoid Organs
-        if (lymphoidOrgans.isOn)
-        {
-            List<GameObject> loToIsolate = lymphoidOrgansBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                loToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in loToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Nervous System
-        if (nervousSystem.isOn)
-        {
-            List<GameObject> nsToIsolate = nervousSystemBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                nsToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in nsToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Visceral System
-        if (visceralSystem.isOn)
-        {
-            List<GameObject> vsToIsolate = visceralSystemBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                vsToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in vsToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Cardiovascular
-        if (cardiovascular.isOn)
-        {
-            List<GameObject> cardioToIsolate = cardiovascularBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                cardioToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in cardioToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Muscular System
-        if (muscularSystem.isOn)
-        {
-            List<GameObject> muscularToIsolate = muscularSystemBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                muscularToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in muscularToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
-        //Human
-        if (human.isOn)
-        {
-            List<GameObject> humanToIsolate = humanBodyParts;
-            foreach (GameObject selected in selectedBodyParts)
-            {
-                humanToIsolate.Remove(selected);
-            }
-
-            foreach (GameObject isolateObj in humanToIsolate)
-            {
-                isolateObj.SetActive(false);
-            }
-        }
-
         //Target zoom pos
         Vector3 targetPosition = isMultiSelect ? CalculateCenterPoint(selectedBodyParts) : selectedBodyParts[0].transform.position;
         StartCoroutine(ZoomToPosition(targetPosition, targetOrthographicSize));
     }
 
     public void Deisolate()
-    {   
-        if (skeleton.isOn)
+    {
+        var isolationMap = new Dictionary<Toggle, List<GameObject>>()
         {
-            foreach (GameObject isolateObj in skeletonBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
+            { skeleton, skeletonBodyParts },
+            { joints, jointsBodyParts },
+            { lymphoidOrgans, lymphoidOrgansBodyParts },
+            { nervousSystem, nervousSystemBodyParts },
+            { visceralSystem, visceralSystemBodyParts },
+            { cardiovascular, cardiovascularBodyParts }
+        };
 
-        if (joints.isOn)
+        foreach (var entry in isolationMap)
         {
-            foreach (GameObject isolateObj in jointsBodyParts)
+            if (entry.Key.isOn)
             {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (lymphoidOrgans.isOn)
-        {
-            foreach (GameObject isolateObj in lymphoidOrgansBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (nervousSystem.isOn)
-        {
-            foreach (GameObject isolateObj in nervousSystemBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (visceralSystem.isOn)
-        {
-            foreach (GameObject isolateObj in visceralSystemBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (cardiovascular.isOn)
-        {
-            foreach (GameObject isolateObj in cardiovascularBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (muscularSystem.isOn)
-        {
-            foreach (GameObject isolateObj in muscularSystemBodyParts)
-            {
-                isolateObj.SetActive(true);
-            }
-        }
-
-        if (human.isOn)
-        {
-            foreach (GameObject isolateObj in humanBodyParts)
-            {
-                isolateObj.SetActive(true);
+                foreach (GameObject obj in entry.Value)
+                {
+                    obj.SetActive(true);
+                }
             }
         }
 
