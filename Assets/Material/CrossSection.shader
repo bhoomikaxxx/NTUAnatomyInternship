@@ -2,7 +2,7 @@ Shader "Unlit/CrossSection"
 {
     Properties
     {
-        _MainTex ("Main Texture", 2D) = "grey" {}
+        _MainColor ("Main Color", Color) = (0.6196, 0.6157, 0.6196, 1)  // Hex 9E9D9E
         _PlanePosition ("Plane Position", Vector) = (0, 0, 0, 0)
         _PlaneNormal ("Plane Normal", Vector) = (0, 1, 0, 0)
     }
@@ -20,7 +20,7 @@ Shader "Unlit/CrossSection"
             #include "UnityCG.cginc"
 
             // Properties from the inspector
-            sampler2D _MainTex;
+            fixed4 _MainColor;  // Use a fixed color instead of a texture
             float4 _PlanePosition; // xyz is the position of the plane
             float4 _PlaneNormal;   // xyz is the normal of the plane
 
@@ -51,14 +51,14 @@ Shader "Unlit/CrossSection"
                 // Calculate the distance of the fragment from the plane
                 float distance = dot(_PlaneNormal.xyz, i.worldPos - _PlanePosition.xyz);
 
-                // Discard fragments below the plane
-                if (distance < 0.0)
+                // Instead of discarding fragments below the plane, discard above it
+                if (distance > 0.0) // Flip the condition
                     discard;
 
-                // Sample the texture and return the color
-                fixed4 color = tex2D(_MainTex, i.uv);
-                return color;
+                // Return the color directly (no texture sampling)
+                return _MainColor;
             }
+
             ENDCG
         }
     }

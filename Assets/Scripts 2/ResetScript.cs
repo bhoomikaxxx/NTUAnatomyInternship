@@ -39,7 +39,8 @@ public class ResetScript : MonoBehaviour
     public Dictionary<GameObject, Transform> initialBodyParents = new Dictionary<GameObject, Transform>();
 
     //BodyPartsScript script ref
-    private BodyPartsScript bodyPartManager;
+    public BodyPartsScript bodyPartManager;
+    public CrossSectionController crossSectionScript;
 
     void Awake()
     {
@@ -93,6 +94,11 @@ public class ResetScript : MonoBehaviour
         {
             models.transform.rotation = initialModelRotation;
         }
+
+        if (crossSectionScript.crossSectionToggle.isOn) // Only move the plane if cross-section is enabled
+        {
+            crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
+        }
     }
 
     public void Reset()
@@ -109,7 +115,12 @@ public class ResetScript : MonoBehaviour
             part.transform.rotation = initialBodyRotations[part];
 
             ClearSelection();
-            
+
+            if (crossSectionScript.crossSectionToggle.isOn) // Only move the plane if cross-section is enabled
+            {
+                crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
+            }
+            //crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
         }
 
     }

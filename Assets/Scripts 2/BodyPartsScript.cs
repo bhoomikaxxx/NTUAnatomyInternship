@@ -44,14 +44,7 @@ public class BodyPartsScript : MonoBehaviour
     //private List<GameObject> previouslyActiveBodyParts = new List<GameObject>();
 
     //Models
-    public GameObject skeletonModel;
-    public GameObject jointsModel;
-    public GameObject loModel;
-    public GameObject nsModel;
-    public GameObject vsModel;
-    public GameObject cardioModel;
-    public GameObject msModel;
-    public GameObject humanModel;
+    public GameObject skeletonModel, jointsModel, loModel, nsModel, vsModel, cardioModel, msModel, humanModel;
 
     //Drag
     public GameObject selectedBodyPart = null;
@@ -66,14 +59,7 @@ public class BodyPartsScript : MonoBehaviour
     public Toggle multiSelectToggle;
 
     //Skeleton toggle
-    public Toggle skeleton;
-    public Toggle joints;
-    public Toggle lymphoidOrgans;
-    public Toggle nervousSystem;
-    public Toggle visceralSystem;
-    public Toggle cardiovascular;
-    public Toggle muscularSystem;
-    public Toggle human;
+    public Toggle skeleton, joints, lymphoidOrgans, nervousSystem, visceralSystem, cardiovascular, muscularSystem, human;
 
     //Multi select
     [Header("Multi Select")]
@@ -87,20 +73,20 @@ public class BodyPartsScript : MonoBehaviour
     //Double click deselect for multi select
     private float lastClickTime = 0f;
 
+    // Cached colors
+    private Color selectedColor, defaultColor;
+
     public void Awake()
     {
-        //Add cam
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-
-        //Capture original cam to use for deisolation
+        if (mainCamera == null) mainCamera = Camera.main;
         normalOrthographicSize = mainCamera.orthographicSize;
         initialCameraPosition = mainCamera.transform.position;
 
-        //Ref to Undo script
         historyManager = FindObjectOfType<UndoScript>();
+
+        // Set colors
+        ColorUtility.TryParseHtmlString("#EFEFEF", out selectedColor);
+        ColorUtility.TryParseHtmlString("#B2AFAF", out defaultColor);
 
         //Add single select toggle
         if (singleSelectToggle != null)
@@ -139,10 +125,10 @@ public class BodyPartsScript : MonoBehaviour
     //Drag check func
     public void Dragging()
     {
-        //Check for left mouse click or touch start
+        // Check for left mouse click or touch start
         if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
         {
-            //Get position of the input (mouse or touch)
+            // Get position of the input (mouse or touch)
             Vector3 screenPosition = GetInputPosition();
             Ray ray = mainCamera.ScreenPointToRay(screenPosition);
             RaycastHit hit;
@@ -153,54 +139,47 @@ public class BodyPartsScript : MonoBehaviour
                 {
                     GameObject bodyPart = hit.collider.gameObject;
 
-                    //Check for time between clicks 
+                    // Check for time between clicks
                     float currentTime = Time.time;
 
                     if (isMultiSelect && selectedBodyParts.Contains(bodyPart))
                     {
-                        //Check for double-click (mouse) or double-tap (touch)
-                        if (currentTime - lastClickTime < 1f)
+                        // Check for double-click (mouse) or double-tap (touch)
+                        if (currentTime - lastClickTime < 0.5f)
                         {
-                            //Deselect
                             selectedBodyParts.Remove(bodyPart);
                             dragOffsets.Remove(bodyPart);
-                            ClearColours();
-                            //Label
+                            ResetColour(bodyPart);
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
                     }
                     else
                     {
-                        //Multi select add
+                        // Multi select add
                         if (isMultiSelect)
                         {
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            ChangeColor(bodyPart, ColorUtility.TryParseHtmlString("#EFEFEF", out Color selectedColor) ? selectedColor : Color.white);
-
-                            //Update label
+                            ChangeColor(bodyPart, selectedColor);
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
-                        //Single select add
+                        // Single select add
                         else if (!isMultiSelect && singleSelectToggle.isOn)
                         {
-                            selectedBodyParts.Clear();
-                            dragOffsets.Clear();
+                            ClearSelection();
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            ClearColours();
-                            ChangeColor(bodyPart, ColorUtility.TryParseHtmlString("#EFEFEF", out Color selectedColor) ? selectedColor : Color.white);
-
-                            //Update label
+                            ChangeColor(bodyPart, selectedColor);
                             labelText.text = "Selected Part: " + bodyPart.name;
                         }
+                    
                     }
-                    lastClickTime = currentTime; 
+                    lastClickTime = currentTime;
                 }
             }
         }
 
-        //Dragging - left mouse/touch
+        // Dragging - left mouse/touch
         if (Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved))
         {
             if (!isDragging && selectedBodyParts.Count > 0)
@@ -223,6 +202,15 @@ public class BodyPartsScript : MonoBehaviour
         }
     }
 
+    private void ClearSelection()
+    {
+        if (selectedBodyParts.Count > 0)
+            ResetColour(selectedBodyParts[0]);
+
+        selectedBodyParts.Clear();
+        dragOffsets.Clear();
+    }
+
     //Outline func
     private void ChangeColor(GameObject bodyPart, Color color)
     {
@@ -238,20 +226,29 @@ public class BodyPartsScript : MonoBehaviour
         Renderer renderer = bodyPart.GetComponent<Renderer>();
         if (renderer != null)
         {
-            renderer.material.color = ColorUtility.TryParseHtmlString("#B2AFAF", out Color defaultColor) ? defaultColor : Color.gray;
+            renderer.material.color = ColorUtility.TryParseHtmlString("#B2AFAF", out Color defaultColor) ? defaultColor : Color.gray; // Default gray color
         }
     }
 
     public void ClearColours()
     {
-        foreach (GameObject bodyPart in selectedBodyParts)
+        // In single select mode, clear only the color of the currently selected body part
+        if (!isMultiSelect && selectedBodyParts.Count > 0)
         {
-            ResetColour(bodyPart);
+            ResetColour(selectedBodyParts[0]);
+        }
+        // In multi-select mode, clear all selected parts
+        else if (isMultiSelect)
+        {
+            foreach (GameObject bodyPart in selectedBodyParts)
+            {
+                ResetColour(bodyPart);
+            }
         }
     }
 
-    //Drag func
-    public void Drag()
+//Drag func
+public void Drag()
     {
         isDragging = true;
         Vector3 screenPosition = GetInputPosition();
