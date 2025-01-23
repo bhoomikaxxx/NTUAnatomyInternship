@@ -25,10 +25,12 @@ using UnityEngine.EventSystems;
 public class Controller : MonoBehaviour
 {
     //Declarations
+    //Cam
     [Header("Camera")]
     public Camera mainCamera;
     private Vector3 touchStart;
 
+    //Rotation
     [Header("Rotation")]
     public Transform models;
     private Vector2 previousTouchPosition;
@@ -36,7 +38,7 @@ public class Controller : MonoBehaviour
     private bool isRotating = false;
 
     //Undo script
-    private UndoScript historyManager;
+    //private UndoScript historyManager;
 
     //Cam states
     private enum CameraAction { None, Panning, Zooming, Rotating }
@@ -44,13 +46,14 @@ public class Controller : MonoBehaviour
 
     private void Awake()
     {
+        //Get cam
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
         }
 
         //Reference to undo script
-        historyManager = FindObjectOfType<UndoScript>();
+        //historyManager = FindObjectOfType<UndoScript>();
     }
 
     void Update()
@@ -164,7 +167,7 @@ public class Controller : MonoBehaviour
                     previousTouchPosition = touch.position;
 
                     //Record initial rotation
-                    historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
+                    //historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
                 }
                 //Rotate logic
                 else if (touch.phase == TouchPhase.Moved && isRotating)
@@ -189,7 +192,7 @@ public class Controller : MonoBehaviour
                 previousTouchPosition = Input.mousePosition;
 
                 //Record initial rotation
-                historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
+                //historyManager.RecordState(models.gameObject, models.transform.position, models.transform.rotation);
             }
             //Rotate logic
             else if (Input.GetMouseButton(1) && isRotating)

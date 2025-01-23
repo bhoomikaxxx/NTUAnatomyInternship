@@ -95,7 +95,7 @@ public class ResetScript : MonoBehaviour
             models.transform.rotation = initialModelRotation;
         }
 
-        if (crossSectionScript.crossSectionToggle.isOn) // Only move the plane if cross-section is enabled
+        if (crossSectionScript.crossSectionToggle.isOn)
         {
             crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
         }
@@ -116,11 +116,10 @@ public class ResetScript : MonoBehaviour
 
             ClearSelection();
 
-            if (crossSectionScript.crossSectionToggle.isOn) // Only move the plane if cross-section is enabled
+            if (crossSectionScript.crossSectionToggle.isOn) 
             {
                 crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
             }
-            //crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
         }
 
     }
@@ -131,10 +130,7 @@ public class ResetScript : MonoBehaviour
         bodyPartManager.dragOffsets.Clear();
 
         //Reset label UI
-        if (labelText != null)
-        {
-            labelText.text = "No parts selected";
-        }
+        labelText.text = "No parts selected";
 
         //Reset selection toggles
         singleSelectToggle.isOn = false;

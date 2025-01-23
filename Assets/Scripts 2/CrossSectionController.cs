@@ -1,3 +1,8 @@
+/*
+ * Name: Bhoomika Manot
+ * Date: 05 Jan 2025
+ * Description: Script for cross sectioning heart and brain 
+ */
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,42 +12,47 @@ using UnityEngine.EventSystems;
 
 public class CrossSectionController : MonoBehaviour
 {
-    public Material crossSectionMaterial;  // Assign the cross-section material
-    public Transform planeTransform;       // Assign the plane object (empty GameObject)
-    public Slider crossSectionSlider;      // Assign the UI Slider
-    public Toggle crossSectionToggle;      // Assign the UI Checkbox
+    //Declarations
+    public Material crossSectionMaterial;  
+    public Transform planeTransform;      
+    public Slider crossSectionSlider;      
+    public Toggle crossSectionToggle;      
 
-    private Vector3 defaultPlanePosition;  // Store default plane position
+    private Vector3 defaultPlanePosition;  
 
     void Start()
     {
-        // Store the initial plane position (so we can reset when toggle is off)
+        //Store the initial plane pos
         defaultPlanePosition = planeTransform.position;
 
-        // Add listeners to UI elements
         crossSectionSlider.onValueChanged.AddListener(UpdateCrossSection);
         crossSectionToggle.onValueChanged.AddListener(ToggleCrossSection);
     }
 
+    //Slider func
     void UpdateCrossSection(float sliderValue)
     {
-        if (crossSectionToggle.isOn) // Only move the plane if cross-section is enabled
+        //Check if toggle is on
+        if (crossSectionToggle.isOn) 
         {
-            float invertedValue = 1f - sliderValue; // Invert slider effect
+            //Invert slider
+            float invertedValue = 1f - sliderValue;
+
+            //Slider func
             planeTransform.position = new Vector3(defaultPlanePosition.x, invertedValue, defaultPlanePosition.z);
             crossSectionMaterial.SetVector("_PlanePosition", planeTransform.position);
         }
     }
 
+    //Toggle func
     void ToggleCrossSection(bool isEnabled)
     {
         if (!isEnabled)
         {
-            // Reset plane position when unchecked
+            //Reset plane pos
             planeTransform.position = new Vector3(0f, 0.75f, 0f);
         }
 
-        // Apply the change to the shader
         crossSectionMaterial.SetVector("_PlanePosition", planeTransform.position);
     }
 }
