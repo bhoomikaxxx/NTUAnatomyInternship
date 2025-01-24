@@ -58,24 +58,14 @@ namespace Lean.Touch
 		/// <summary>This gets fired when a finger stops touching the screen (LeanFinger = The current finger)</summary>
 		public static event System.Action<LeanFinger> OnFingerUp;
 
-        public static object GetFingers(bool ignoreGuiFingers, int requiredFingerCount)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        /// <summary>This gets fired when a finger has been touching the screen for longer than <b>TapThreshold</b> seconds, causing it to be ineligible for the tap and swipe events.</summary>
-        public static event System.Action<LeanFinger> OnFingerOld;
+		/// <summary>This gets fired when a finger has been touching the screen for longer than <b>TapThreshold</b> seconds, causing it to be ineligible for the tap and swipe events.</summary>
+		public static event System.Action<LeanFinger> OnFingerOld;
 
 		/// <summary>This gets fired when a finger taps the screen (this is when a finger begins and stops touching the screen within the 'TapThreshold' time).</summary>
 		public static event System.Action<LeanFinger> OnFingerTap;
 
-        public static object GetCamera(Camera mainCamera, GameObject gameObject)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        /// <summary>This gets fired when a finger swipes the screen (this is when a finger begins and stops touching the screen within the 'TapThreshold' time, and also moves more than the 'SwipeThreshold' distance) (LeanFinger = The current finger)</summary>
-        public static event System.Action<LeanFinger> OnFingerSwipe;
+		/// <summary>This gets fired when a finger swipes the screen (this is when a finger begins and stops touching the screen within the 'TapThreshold' time, and also moves more than the 'SwipeThreshold' distance) (LeanFinger = The current finger)</summary>
+		public static event System.Action<LeanFinger> OnFingerSwipe;
 
 		/// <summary>This gets fired every frame at least one finger is touching the screen (List = Fingers).</summary>
 		public static event System.Action<List<LeanFinger>> OnGesture;

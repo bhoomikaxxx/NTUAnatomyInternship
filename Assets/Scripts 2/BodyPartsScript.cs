@@ -363,16 +363,9 @@ public void Drag()
             }
         }
 
-        // Get the bounds of selected objects
         Bounds bounds = CalculateBounds(selectedBodyParts);
-
-        // Calculate the required orthographic size
         float newOrthoSize = CalculateOrthographicSize(bounds);
-
-        // Target camera position is the center of the bounds
         Vector3 targetPosition = new Vector3(bounds.center.x, bounds.center.y, mainCamera.transform.position.z);
-
-        // Start the zoom
         StartCoroutine(ZoomToPosition(targetPosition, newOrthoSize));
     }
 
@@ -403,7 +396,6 @@ public void Drag()
         StartCoroutine(ZoomToPosition(initialCameraPosition, normalOrthographicSize));
     }
 
-    // Calculate the bounds for the selected objects
     private Bounds CalculateBounds(List<GameObject> selectedObjects)
     {
         if (selectedObjects == null || selectedObjects.Count == 0)
@@ -421,16 +413,13 @@ public void Drag()
 
     private float CalculateOrthographicSize(Bounds bounds)
     {
-        // Get the max distance in X and Y
         float maxExtentX = bounds.extents.x;
         float maxExtentY = bounds.extents.y;
 
-        // Calculate required orthographic size (considering aspect ratio)
-        float cameraAspect = mainCamera.aspect; // Width / Height
-        float requiredSizeY = maxExtentY + 0.25f;  // Add margin
+        float cameraAspect = mainCamera.aspect; 
+        float requiredSizeY = maxExtentY + 0.25f;  
         float requiredSizeX = (maxExtentX / cameraAspect) + 0.25f;
 
-        // Use the larger value to ensure everything fits in the view
         return Mathf.Max(requiredSizeX, requiredSizeY);
     }
 
@@ -458,17 +447,5 @@ public void Drag()
         mainCamera.orthographicSize = targetSize;
         isZooming = false;
     }
-
-    //Center zoom
-    /*private Vector3 CalculateCenterPoint(List<GameObject> selectedObjects)
-    {
-        Vector3 centerPoint = Vector3.zero;
-        foreach (GameObject obj in selectedObjects)
-        {
-            centerPoint += obj.transform.position;
-        }
-        centerPoint /= selectedObjects.Count;
-        return centerPoint;
-    }*/
 }
 

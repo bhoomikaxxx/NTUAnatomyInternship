@@ -16,7 +16,9 @@ public class CrossSectionController : MonoBehaviour
     public Material crossSectionMaterial;  
     public Transform planeTransform;      
     public Slider crossSectionSlider;      
-    public Toggle crossSectionToggle;      
+    public Toggle crossSectionToggle;
+
+    public Toggle nervous, cardio;
 
     private Vector3 defaultPlanePosition;  
 
