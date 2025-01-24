@@ -362,10 +362,18 @@ public void Drag()
                 }
             }
         }
-        
-        //Target zoom pos
-        Vector3 targetPosition = isMultiSelect ? CalculateCenterPoint(selectedBodyParts) : selectedBodyParts[0].transform.position;
-        StartCoroutine(ZoomToPosition(targetPosition, targetOrthographicSize));
+
+        // Get the bounds of selected objects
+        Bounds bounds = CalculateBounds(selectedBodyParts);
+
+        // Calculate the required orthographic size
+        float newOrthoSize = CalculateOrthographicSize(bounds);
+
+        // Target camera position is the center of the bounds
+        Vector3 targetPosition = new Vector3(bounds.center.x, bounds.center.y, mainCamera.transform.position.z);
+
+        // Start the zoom
+        StartCoroutine(ZoomToPosition(targetPosition, newOrthoSize));
     }
 
     public void Deisolate()
@@ -395,6 +403,37 @@ public void Drag()
         StartCoroutine(ZoomToPosition(initialCameraPosition, normalOrthographicSize));
     }
 
+    // Calculate the bounds for the selected objects
+    private Bounds CalculateBounds(List<GameObject> selectedObjects)
+    {
+        if (selectedObjects == null || selectedObjects.Count == 0)
+            return new Bounds(Vector3.zero, Vector3.zero);
+
+        Bounds bounds = new Bounds(selectedObjects[0].transform.position, Vector3.zero);
+
+        foreach (GameObject obj in selectedObjects)
+        {
+            bounds.Encapsulate(obj.transform.position);
+        }
+
+        return bounds;
+    }
+
+    private float CalculateOrthographicSize(Bounds bounds)
+    {
+        // Get the max distance in X and Y
+        float maxExtentX = bounds.extents.x;
+        float maxExtentY = bounds.extents.y;
+
+        // Calculate required orthographic size (considering aspect ratio)
+        float cameraAspect = mainCamera.aspect; // Width / Height
+        float requiredSizeY = maxExtentY + 0.25f;  // Add margin
+        float requiredSizeX = (maxExtentX / cameraAspect) + 0.25f;
+
+        // Use the larger value to ensure everything fits in the view
+        return Mathf.Max(requiredSizeX, requiredSizeY);
+    }
+
     private IEnumerator ZoomToPosition(Vector3 targetPosition, float targetSize)
     {
         isZooming = true;
@@ -421,7 +460,7 @@ public void Drag()
     }
 
     //Center zoom
-    private Vector3 CalculateCenterPoint(List<GameObject> selectedObjects)
+    /*private Vector3 CalculateCenterPoint(List<GameObject> selectedObjects)
     {
         Vector3 centerPoint = Vector3.zero;
         foreach (GameObject obj in selectedObjects)
@@ -430,6 +469,6 @@ public void Drag()
         }
         centerPoint /= selectedObjects.Count;
         return centerPoint;
-    }
+    }*/
 }
 
