@@ -134,7 +134,7 @@ public class BodyPartsScript : MonoBehaviour
         if (!singleSelectToggle.isOn && !multiSelectToggle.isOn)
         {
             ClearSelection();
-            labelText.text = "No parts selected";
+            labelText.text = " ";
             return;
         }
 
