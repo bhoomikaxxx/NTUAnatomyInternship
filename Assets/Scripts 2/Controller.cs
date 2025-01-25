@@ -211,16 +211,23 @@ public class Controller : MonoBehaviour
         }
     }
 
-    //Check for body part - diff func [drag bdoy part(s)] in BodyPartsScript
+    //Check for body part - diff func [drag body part(s)] in BodyPartsScript
     public bool IsPointerOverMovableObject()
     {
         if (Input.touchCount > 0)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.GetTouch(0).position);
             RaycastHit hit;
-            return Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Movable");
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                if (hit.collider.CompareTag("Movable") || hit.collider.CompareTag("UI"))
+                {
+                    return false;
+                }
+            }
         }
-        return false;
+        return true;
     }
 
     //Rotate code for ORTHO cam
