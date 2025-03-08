@@ -87,10 +87,6 @@ public class BodyPartsScript : MonoBehaviour
 
         //historyManager = FindObjectOfType<UndoScript>();
 
-        //Set colours
-        ColorUtility.TryParseHtmlString("#EFEFEF", out selectedColor);
-        ColorUtility.TryParseHtmlString("#B2AFAF", out defaultColor);
-
         //Add single select toggle
         if (singleSelectToggle != null)
         {
@@ -101,7 +97,7 @@ public class BodyPartsScript : MonoBehaviour
                     isMultiSelect = false;
                     multiSelectToggle.isOn = false;
                     ClearSelection();
-                    ClearColours();
+                    //ClearColours();
                 }
             });
         }
@@ -116,7 +112,7 @@ public class BodyPartsScript : MonoBehaviour
                     isMultiSelect = true;
                     singleSelectToggle.isOn = false;
                     ClearSelection();
-                    ClearColours();
+                    //ClearColours();
                 }
             });
         }
@@ -172,7 +168,7 @@ public class BodyPartsScript : MonoBehaviour
                         {
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            ChangeColor(bodyPart, selectedColor);
+                            ChangeColor(bodyPart, 0.25f);
                             labelText.text = $"Selected {selectedBodyParts.Count} Parts";
                         }
 
@@ -182,7 +178,7 @@ public class BodyPartsScript : MonoBehaviour
                             ClearSelection();
                             selectedBodyParts.Add(bodyPart);
                             dragOffsets[bodyPart] = Vector3.zero;
-                            ChangeColor(bodyPart, selectedColor);
+                            ChangeColor(bodyPart, 0.25f);
                             labelText.text = "Selected Part: " + bodyPart.name;
                         }
                     }
@@ -220,36 +216,40 @@ public class BodyPartsScript : MonoBehaviour
     }
 
     //Reset logic
-    private void ClearSelection()
+    public void ClearSelection()
     {
-        if (selectedBodyParts.Count > 0)
-            ResetColour(selectedBodyParts[0]);
-
+        foreach (var bodyPart in selectedBodyParts)
+        {
+            ResetColour(bodyPart);
+        }
         selectedBodyParts.Clear();
         dragOffsets.Clear();
     }
 
-    //Outline func
-    private void ChangeColor(GameObject bodyPart, Color color)
+    public void ChangeColor(GameObject bodyPart, float emissionIntensity)
     {
         Renderer renderer = bodyPart.GetComponent<Renderer>();
         if (renderer != null)
         {
-            renderer.material.color = color;
+            Material material = renderer.material;
+            material.EnableKeyword("_EMISSION");
+            Color baseColor = material.color;
+            material.SetColor("_EmissionColor", baseColor * emissionIntensity);
         }
     }
 
-    //Deselection outline func
     public void ResetColour(GameObject bodyPart)
     {
         Renderer renderer = bodyPart.GetComponent<Renderer>();
         if (renderer != null)
         {
-            renderer.material.color = ColorUtility.TryParseHtmlString("#B2AFAF", out Color defaultColor) ? defaultColor : Color.gray; 
+            Material material = renderer.material;
+            material.DisableKeyword("_EMISSION");
+            material.SetColor("_EmissionColor", Color.black);
         }
     }
 
-    public void ClearColours()
+    /*public void ClearColours()
     {
         //Single select logic
         if (!isMultiSelect && selectedBodyParts.Count > 0)
@@ -264,10 +264,10 @@ public class BodyPartsScript : MonoBehaviour
                 ResetColour(bodyPart);
             }
         }
-    }
+    }*/
 
-//Drag func
-public void Drag()
+    //Drag func
+    public void Drag()
     {
         isDragging = true;
         Vector3 screenPosition = GetInputPosition();
@@ -347,7 +347,9 @@ public void Drag()
             { lymphoidOrgans, lymphoidOrgansBodyParts },
             { nervousSystem, nervousSystemBodyParts },
             { visceralSystem, visceralSystemBodyParts },
-            { cardiovascular, cardiovascularBodyParts }
+            { cardiovascular, cardiovascularBodyParts },
+            { muscularSystem, muscularSystemBodyParts },
+            { human, humanBodyParts }
         };
 
         foreach (var entry in isolationMap)
@@ -378,7 +380,9 @@ public void Drag()
             { lymphoidOrgans, lymphoidOrgansBodyParts },
             { nervousSystem, nervousSystemBodyParts },
             { visceralSystem, visceralSystemBodyParts },
-            { cardiovascular, cardiovascularBodyParts }
+            { cardiovascular, cardiovascularBodyParts },
+            { muscularSystem, muscularSystemBodyParts },
+            { human, humanBodyParts }
         };
 
         foreach (var entry in isolationMap)

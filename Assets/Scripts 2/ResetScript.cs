@@ -20,10 +20,17 @@ public class ResetScript : MonoBehaviour
     [Header("Camera States")]
     public Vector3 initialCameraPosition;
     public Quaternion initialCameraRotation;
-    public float initialZoom; 
+    public float initialZoom;
 
     [Header("Models")]
-    public GameObject models;
+    public GameObject skeletonModel;
+    public GameObject jointsModel;
+    public GameObject loModel;
+    public GameObject nsModel;
+    public GameObject vsModel;
+    public GameObject cardioModel;
+    public GameObject msModel;
+    public GameObject humanModel;
     public Quaternion initialModelRotation;
 
     [Header("Text")]
@@ -33,12 +40,12 @@ public class ResetScript : MonoBehaviour
     public Toggle singleSelectToggle;
     public Toggle multiSelectToggle;
 
-    //Dictionary to store the initial values
-    public Dictionary<GameObject, Vector3> initialBodyPositions = new Dictionary<GameObject, Vector3>();
-    public Dictionary<GameObject, Quaternion> initialBodyRotations = new Dictionary<GameObject, Quaternion>();
-    public Dictionary<GameObject, Transform> initialBodyParents = new Dictionary<GameObject, Transform>();
+    // Dictionary to store the initial values
+    private Dictionary<GameObject, Vector3> initialBodyPositions = new Dictionary<GameObject, Vector3>();
+    private Dictionary<GameObject, Quaternion> initialBodyRotations = new Dictionary<GameObject, Quaternion>();
+    private Dictionary<GameObject, Transform> initialBodyParents = new Dictionary<GameObject, Transform>();
 
-    //BodyPartsScript script ref
+    // BodyPartsScript script ref
     public BodyPartsScript bodyPartManager;
     public CrossSectionController crossSectionScript;
 
@@ -46,96 +53,79 @@ public class ResetScript : MonoBehaviour
     {
         bodyPartManager = FindObjectOfType<BodyPartsScript>();
 
-        //Get initial values of cam
         if (mainCamera != null)
         {
             initialCameraPosition = mainCamera.transform.position;
             initialCameraRotation = mainCamera.transform.rotation;
-
-            //Storing initial zoom
             if (mainCamera.orthographic)
             {
                 initialZoom = mainCamera.orthographicSize;
             }
         }
 
-        //Storing the initial values of the body parts
-        GameObject[] bodyParts = GameObject.FindGameObjectsWithTag("Movable");
-        foreach (GameObject part in bodyParts)
-        {
-            initialBodyPositions[part] = part.transform.position;
-            initialBodyRotations[part] = part.transform.rotation;
-            initialBodyParents[part] = part.transform.parent;
-        }
+        StoreInitialBodyPartValues(skeletonModel);
+        StoreInitialBodyPartValues(jointsModel);
+        StoreInitialBodyPartValues(loModel);
+        StoreInitialBodyPartValues(nsModel);
+        StoreInitialBodyPartValues(vsModel);
+        StoreInitialBodyPartValues(cardioModel);
+        StoreInitialBodyPartValues(msModel);
+        StoreInitialBodyPartValues(humanModel);
+    }
 
-        //Store initial rotation
-        if (models != null)
+    private void StoreInitialBodyPartValues(GameObject model)
+    {
+        if (model != null)
         {
-            initialModelRotation = models.transform.rotation;
+            foreach (Transform part in model.GetComponentsInChildren<Transform>())
+            {
+                if (part.CompareTag("Movable"))
+                {
+                    initialBodyPositions[part.gameObject] = part.position;
+                    initialBodyRotations[part.gameObject] = part.rotation;
+                    initialBodyParents[part.gameObject] = part.parent;
+                }
+            }
         }
     }
 
     public void Center()
     {
-        //Reset cam values
         if (mainCamera != null)
         {
             mainCamera.transform.position = initialCameraPosition;
             mainCamera.transform.rotation = initialCameraRotation;
-
             if (mainCamera.orthographic)
             {
                 mainCamera.orthographicSize = initialZoom;
             }
         }
-
-        //Reset rotation
-        if (models != null)
-        {
-            models.transform.rotation = initialModelRotation;
-        }
-
-        if (crossSectionScript.crossSectionToggle.isOn)
-        {
-            crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
-        }
     }
 
     public void Reset()
     {
-        //Reset body part values
         foreach (KeyValuePair<GameObject, Vector3> entry in initialBodyPositions)
         {
             GameObject part = entry.Key;
-
-            bodyPartManager.ClearColours();
-            bodyPartManager.Deisolate();
-
-            part.transform.position = entry.Value;
-            part.transform.rotation = initialBodyRotations[part];
-
-            ClearSelection();
-
-            if (crossSectionScript.crossSectionToggle.isOn) 
+            if (part != null)
             {
-                crossSectionScript.planeTransform.position = new Vector3(0f, 0.75f, 0f);
+                //bodyPartManager.ClearColours();
+                bodyPartManager.ClearSelection();
+                bodyPartManager.Deisolate();
+                part.transform.position = entry.Value;
+                part.transform.rotation = initialBodyRotations[part];
             }
         }
-
+        ClearSelection();
     }
+
     public void ClearSelection()
     {
-        //Clear selected body parts and offsets
         bodyPartManager.selectedBodyParts.Clear();
         bodyPartManager.dragOffsets.Clear();
-
-        //Reset label UI
         labelText.text = "No parts selected";
-
-        //Reset selection toggles
         singleSelectToggle.isOn = false;
         multiSelectToggle.isOn = false;
-
         bodyPartManager.isDragging = false;
     }
 }
